@@ -3,6 +3,8 @@ const next = require("next");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const User = require("./models/users");
+const Transaction = require("./models/transaction");
+const { redirect } = require("next/dist/server/api-utils");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -32,21 +34,59 @@ app.prepare().then(async () => {
   server.use(express.static("../pages"));
   server.all("/_next/*", (req, res) => handle(req, res));
 
-  const userExists = (email) => {
+  const getUser = (name, email) => {
     return new Promise(async (resolve, reject) => {
-      User.find({ email })
+      User.findOne({ name, email })
         .then((result) => {
-          if (result.length > 0) {
-            resolve(true);
-            console.log(`${email} found`);
+          if (result) {
+            resolve(result);
           } else {
-            resolve(false);
-            console.log(`${email} not found`);
+            resolve(null);
           }
         })
         .catch((err) => {
           console.log(err);
         });
+    });
+  };
+
+  const createUser = (name, email) => {
+    return new Promise(async (resolve, reject) => {
+      const found = await getUser(name, email);
+      console.log(found);
+      if (!found) {
+        const user = new User({
+          name: name,
+          email: email,
+          balance: 100,
+        });
+
+        user
+          .save()
+          .then((response) => {
+            resolve(response);
+          })
+          .catch((err) => console.log(err));
+      } else {
+        resolve(null);
+      }
+    });
+  };
+
+  const createTransaction = (userId, amount) => {
+    return new Promise(async (resolve, reject) => {
+      const transaction = new Transaction({
+        userId,
+        amount,
+      });
+      await transaction.save();
+      const user = await User.findOne({ _id: userId });
+      const newBalance = user.balance + amount;
+      await user.update({ balance: newBalance });
+
+      console.log("userId: ", userId);
+      console.log("user: ", user.id);
+      resolve(true);
     });
   };
 
@@ -60,27 +100,54 @@ app.prepare().then(async () => {
       });
   });
 
-  server.post("/user", jsonParser, async (req, res) => {
-    const found = await userExists(req.body.email);
-    if (!found) {
-      const user = new User({
-        name: req.body.name,
-        email: req.body.email,
-      });
-
-      user
-        .save()
-        .then(() => {
-          res.send("User Created");
-        })
-        .catch((err) => console.log(err));
+  server.get("/user", jsonParser, async (req, res) => {
+    const user = await getUser(req.query.name, req.query.email);
+    if (user) {
+      res.send(user);
     } else {
-      res.send("User already exists");
+      res.send("no user");
     }
+  });
+
+  server.post("/user", jsonParser, async (req, res) => {
+    const user = await createUser(req.body.name, req.body.email);
+    if (user) {
+      res.send(user);
+    } else {
+      res.send("user already exists");
+    }
+  });
+
+  server.get("/transactions/:userId", jsonParser, async (req, res) => {
+    Transaction.find({ userId: req.params.userId })
+      .then((result) => {
+        res.send(result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+
+  server.post("/transaction", jsonParser, async (req, res) => {
+    const created = await createTransaction(req.body.userId, req.body.amount);
+
+    if (created) {
+      res.send("transaction created");
+    }
+  });
+
+  server.post("/sendMoney", jsonParser, async (req, res) => {
+    const amount = Math.abs(req.body.amount);
+
+    const sent = await createTransaction(req.body.currentUserId, -amount);
+    const received = await createTransaction(req.body.recipientUserId, amount);
+
+    res.send("sent and received");
   });
 
   server.get("/clear", async (req, res) => {
     mongoose.connection.collections.users?.deleteMany();
+    mongoose.connection.collections.transactions?.deleteMany();
     res.send("Cleared");
   });
 
