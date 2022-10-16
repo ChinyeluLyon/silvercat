@@ -3,20 +3,24 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import styles from "../styles/Home.module.css";
 import jwt_decode from "jwt-decode";
+import usePostCreateUser from "../frontendapi/UsePostCreateUser";
 
 export default function Home() {
   const [user, setUser] = useState();
+
+  const { fetch: createUser } = usePostCreateUser();
 
   const handleSignOut = (ev) => {
     setUser(null);
     document.getElementById("signInDiv").hidden = false;
   };
 
-  const handleCallbackResponse = (response) => {
+  const handleCallbackResponse = async (response) => {
     console.log("JWT: ", response.credential);
     const userObj = jwt_decode(response.credential);
     console.log("user: ", userObj);
     setUser(userObj);
+    await createUser({ name: userObj.name });
     document.getElementById("signInDiv").hidden = true;
   };
 
