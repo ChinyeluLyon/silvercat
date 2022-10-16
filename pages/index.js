@@ -10,18 +10,22 @@ export default function Home() {
 
   const { fetch: createUser } = usePostCreateUser();
 
+  const hideSignIn = (hidden) => {
+    document.getElementById("signInDiv").hidden = hidden;
+  };
+
   const handleSignOut = (ev) => {
     setUser(null);
-    document.getElementById("signInDiv").hidden = false;
+    hideSignIn(false);
   };
 
   const handleCallbackResponse = async (response) => {
-    console.log("JWT: ", response.credential);
+    // console.log("JWT: ", response.credential);
     const userObj = jwt_decode(response.credential);
-    console.log("user: ", userObj);
+    // console.log("user: ", userObj);
     setUser(userObj);
     await createUser({ name: userObj.name });
-    document.getElementById("signInDiv").hidden = true;
+    hideSignIn(true);
   };
 
   useEffect(() => {
@@ -36,14 +40,30 @@ export default function Home() {
       theme: "outline",
       size: "large",
     });
+    const userSessionData = JSON.parse(sessionStorage.getItem("user"));
+
+    if (userSessionData) {
+      setUser(userSessionData);
+      hideSignIn(true);
+    } else {
+      document.getElementById("signInDiv").hidden = false;
+    }
   }, []);
+
+  useEffect(() => {
+    if (user && sessionStorage.getItem("user") == null) {
+      sessionStorage.setItem("user", JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem("user");
+    }
+  }, [user]);
 
   return (
     <div>
       <div id={"signInDiv"}></div>
       {user && (
         <div>
-          <image src={user.picture} />
+          <img src={user.picture} />
           <h2>{user.name}</h2>
           <button onClick={handleSignOut}>Sign out</button>
         </div>
