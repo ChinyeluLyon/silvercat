@@ -32,16 +32,16 @@ app.prepare().then(async () => {
   server.use(express.static("../pages"));
   server.all("/_next/*", (req, res) => handle(req, res));
 
-  const userExists = (userName) => {
+  const userExists = (email) => {
     return new Promise(async (resolve, reject) => {
-      User.find({ name: userName })
+      User.find({ email })
         .then((result) => {
           if (result.length > 0) {
             resolve(true);
-            console.log(`${userName} found`);
+            console.log(`${email} found`);
           } else {
             resolve(false);
-            console.log(`${userName} not found`);
+            console.log(`${email} not found`);
           }
         })
         .catch((err) => {
@@ -61,10 +61,11 @@ app.prepare().then(async () => {
   });
 
   server.post("/user", jsonParser, async (req, res) => {
-    const found = await userExists(req.body.name);
+    const found = await userExists(req.body.email);
     if (!found) {
       const user = new User({
         name: req.body.name,
+        email: req.body.email,
       });
 
       user
@@ -76,6 +77,11 @@ app.prepare().then(async () => {
     } else {
       res.send("User already exists");
     }
+  });
+
+  server.get("/clear", async (req, res) => {
+    mongoose.connection.collections.users?.deleteMany();
+    res.send("Cleared");
   });
 
   server.all("*", (req, res) => handle(req, res));
