@@ -68,7 +68,7 @@ app.prepare().then(async () => {
           })
           .catch((err) => console.log(err));
       } else {
-        resolve(null);
+        resolve(found);
       }
     });
   };
@@ -84,8 +84,6 @@ app.prepare().then(async () => {
       const newBalance = user.balance + amount;
       await user.update({ balance: newBalance });
 
-      console.log("userId: ", userId);
-      console.log("user: ", user.id);
       resolve(true);
     });
   };
@@ -111,11 +109,7 @@ app.prepare().then(async () => {
 
   server.post("/user", jsonParser, async (req, res) => {
     const user = await createUser(req.body.name, req.body.email);
-    if (user) {
-      res.send(user);
-    } else {
-      res.send("user already exists");
-    }
+    res.send(user);
   });
 
   server.get("/transactions/:userId", jsonParser, async (req, res) => {

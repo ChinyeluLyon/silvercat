@@ -1,21 +1,23 @@
-import Head from "next/head";
-import Image from "next/image";
 import { useEffect, useState } from "react";
-import styles from "../styles/Home.module.css";
 import jwt_decode from "jwt-decode";
-import usePostCreateUser from "../frontendapi/UsePostCreateUser";
+import usePostCreateUser from "../hooks/UsePostCreateUser";
+import useGetTransactions from "../hooks/UseGetTransactions";
+import Transactions from "../modules/transactions";
 
 export default function Home() {
   const [user, setUser] = useState();
-
   const { fetch: createUser } = usePostCreateUser();
+  const { data: transactionsData } = useGetTransactions(user?._id);
+
+  console.log(user?._id);
+  console.log(transactionsData);
 
   const hideSignIn = (hidden) => {
     document.getElementById("signInDiv").hidden = hidden;
   };
 
   const handleSignOut = (ev) => {
-    setUser(null);
+    // setUser(null);
     hideSignIn(false);
   };
 
@@ -23,8 +25,12 @@ export default function Home() {
     // console.log("JWT: ", response.credential);
     const userObj = jwt_decode(response.credential);
     // console.log("user: ", userObj);
-    setUser(userObj);
-    await createUser({ name: userObj.name });
+    const { data: userData } = await createUser({
+      name: userObj.name,
+      email: userObj.email,
+    });
+    console.log(userData);
+    setUser(userData);
     hideSignIn(true);
   };
 
@@ -41,7 +47,7 @@ export default function Home() {
       size: "large",
     });
     const userSessionData = JSON.parse(sessionStorage.getItem("user"));
-
+    console.log(userSessionData);
     if (userSessionData) {
       setUser(userSessionData);
       hideSignIn(true);
@@ -63,11 +69,15 @@ export default function Home() {
       <div id={"signInDiv"}></div>
       {user && (
         <div>
-          <img src={user.picture} />
-          <h2>{user.name}</h2>
           <button onClick={handleSignOut}>Sign out</button>
         </div>
       )}
+
+      <h2>Welcome {user?.name}</h2>
+      <h2>Welcome {user?._id}</h2>
+      <hr />
+
+      <Transactions transactionArray={transactionsData} />
     </div>
   );
 }
