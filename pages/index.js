@@ -4,11 +4,13 @@ import usePostCreateUser from "../hooks/UsePostCreateUser";
 import useGetTransactions from "../hooks/UseGetTransactions";
 import useGetUser from "../hooks/UseGetUser";
 import Transactions from "../modules/transactions";
+import useGetUsers from "../hooks/UseGetUsers";
 
 export default function Home() {
   const [user, setUser] = useState();
   const { fetch: createUser } = usePostCreateUser();
   const { data: transactionsData, refetch } = useGetTransactions(user?._id);
+  const { data: usersData } = useGetUsers();
   const { data: userData, refetch: getUser } = useGetUser(
     user?.name,
     user?.email
@@ -79,6 +81,12 @@ export default function Home() {
     }
   }, [user]);
 
+  const userOptions = usersData
+    ?.filter((u) => u._id !== user?._id)
+    .map((u, idx) => {
+      return <option key={idx}>{u.name}</option>;
+    });
+
   return (
     <div>
       <div id={"signInDiv"}></div>
@@ -91,6 +99,21 @@ export default function Home() {
       <h2>Welcome {user?.name}</h2>
       <h3>Balance: £{user?.balance}</h3>
       <hr />
+
+      <div>
+        <div>
+          <input type="number" />
+          <select>
+            <option disabled selected value>
+              -- select a user --
+            </option>
+            {userOptions}
+          </select>
+        </div>
+        <div>
+          <button>Send Funds</button>
+        </div>
+      </div>
 
       <h2>Transactions</h2>
       <Transactions transactionArray={transactionsData} />
