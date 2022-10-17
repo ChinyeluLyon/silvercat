@@ -1,46 +1,70 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
-import usePostCreateUser from "../hooks/UsePostCreateUser";
-import jwt_decode from "jwt-decode";
+import useGetUserByDetails from "../hooks/UseGetUserByDetails";
+import Transactions from "../modules/transactions";
+import useGetTransactions from "../hooks/UseGetTransactions";
+import SendMoney from "../modules/sendMoney";
+import * as S from "./main.styles";
 
-const LoginSignup = () => {
-  const { fetch: createUser } = usePostCreateUser();
+export const formatCurrency = (value) => {
+  return new Intl.NumberFormat().format(value);
+};
+
+const Home = () => {
   const router = useRouter();
 
-  const handleCallbackResponse = async (response) => {
-    const userObj = jwt_decode(response.credential);
-    const { data: userData } = await createUser({
-      name: userObj.name,
-      email: userObj.email,
-    });
-    const user = {
-      name: userData.name,
-      email: userData.email,
-    };
-    await sessionStorage.setItem("user", JSON.stringify(user));
-    router.push("/home");
+  const { data: userData, fetch: getUser } = useGetUserByDetails();
+  const { data: transactionsData, refetch: getTransactions } =
+    useGetTransactions(userData?._id);
+
+  const handleSignOut = (ev) => {
+    sessionStorage.removeItem("user");
+    router.push("/login");
   };
 
   useEffect(() => {
-    /* global google */
-    google.accounts.id.initialize({
-      client_id:
-        "372579444113-pordtetr86a6u6vfidq2v7ch61a40bjr.apps.googleusercontent.com",
-      callback: handleCallbackResponse,
-    });
-
-    google.accounts.id.renderButton(document.getElementById("signInDiv"), {
-      theme: "outline",
-      size: "large",
-    });
+    if (sessionStorage.getItem("user") == null) {
+      router.push("/login");
+    } else {
+      const seshUser = JSON.parse(sessionStorage.getItem("user"));
+      getUser({ name: seshUser.name, email: seshUser.email });
+    }
   }, []);
 
   return (
     <div>
-      <div id={"signInDiv"}></div>
+      <button onClick={handleSignOut}>Sign out</button>
+      <h1>Bambank</h1>
+      <button
+        onClick={() => {
+          router.push("/allUsers");
+        }}
+      >
+        check other users 👀
+      </button>
+
+      <hr />
+      <div>
+        <h1>Welcome {userData?.name}</h1>
+        <S.Amount amount={userData?.balance}>
+          {userData?.balance < 0 && "-"}€
+          {formatCurrency(Math.abs(userData?.balance))}
+        </S.Amount>
+      </div>
+
+      <h2>Send Money</h2>
+      <SendMoney
+        currentUser={userData}
+        getTransactions={getTransactions}
+        getUser={getUser}
+      />
+
+      <h2>Transactions</h2>
+      {transactionsData?.map((t) => (
+        <Transactions transaction={t} />
+      ))}
     </div>
   );
 };
 
-export default LoginSignup;
+export default Home;

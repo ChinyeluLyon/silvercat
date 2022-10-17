@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import useGetUserById from "../hooks/UseGetUserById";
-import { formatCurrency } from "../pages/home";
+import { formatCurrency } from "../pages";
 import * as S from "./modules.styles";
 
 const Transaction = ({ transaction }) => {

@@ -2,7 +2,8 @@ import React from "react";
 import useGetUsers from "../../hooks/UseGetUsers";
 import * as S from "./allUsers.styles";
 import * as MS from "../../modules/modules.styles";
-import { formatCurrency } from "../home";
+import { formatCurrency } from "..";
+
 const AllUsers = () => {
   const { data: usersData } = useGetUsers();
 
