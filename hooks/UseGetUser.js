@@ -2,21 +2,25 @@ import useAxios from "axios-hooks";
 
 const url = "/user";
 
-const useGetUser = (name, email) => {
-  const params = { name, email };
+const useGetUser = () => {
+  const [{ data, loading, error }, refetch] = useAxios(
+    {},
+    {
+      manual: true,
+      autoCancel: false,
+      useCache: false,
+    }
+  );
 
-  const queryConfig = {
-    method: "GET",
-    url: `${url}`,
-    params,
+  const fetch = ({ name, email }) => {
+    const queryConfig = {
+      method: "GET",
+      url: `${url}`,
+      params: { name, email },
+    };
+    return refetch(queryConfig);
   };
-  const [{ data, loading, error }, refetch] = useAxios(queryConfig, {
-    manual: true,
-    autoCancel: false,
-    useCache: false,
-  });
-
-  return { data, loading, error, refetch };
+  return { data, loading, error, fetch };
 };
 
 export default useGetUser;

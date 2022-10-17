@@ -6,7 +6,6 @@ const usePostSendMoney = () => {
   const [{ data, loading, error }, refetch] = useAxios({}, { manual: true });
 
   const fetch = ({ amount, currentUserId, recipientUserId }) => {
-    console.table({ amount, currentUserId, recipientUserId });
     const queryConfig = {
       method: "POST",
       url: `${url}`,
