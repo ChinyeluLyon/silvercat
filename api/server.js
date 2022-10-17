@@ -73,11 +73,13 @@ app.prepare().then(async () => {
     });
   };
 
-  const createTransaction = (userId, amount) => {
+  const createTransaction = (userId, amount, recipientId, senderId) => {
     return new Promise(async (resolve, reject) => {
       const transaction = new Transaction({
         userId,
         amount,
+        recipientId,
+        senderId,
       });
       await transaction.save();
       const user = await User.findOne({ _id: userId });
@@ -90,6 +92,16 @@ app.prepare().then(async () => {
 
   server.get("/users", jsonParser, (req, res) => {
     User.find()
+      .then((result) => {
+        res.send(result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+
+  server.get("/user/:id", jsonParser, (req, res) => {
+    User.findOne({ _id: req.params.id })
       .then((result) => {
         res.send(result);
       })
@@ -133,8 +145,17 @@ app.prepare().then(async () => {
   server.post("/sendMoney", jsonParser, async (req, res) => {
     const amount = Math.abs(req.body.amount);
 
-    const sent = await createTransaction(req.body.currentUserId, -amount);
-    const received = await createTransaction(req.body.recipientUserId, amount);
+    const sent = await createTransaction(
+      req.body.currentUserId,
+      -amount,
+      req.body.recipientUserId
+    );
+    const received = await createTransaction(
+      req.body.recipientUserId,
+      amount,
+      null,
+      req.body.currentUserId
+    );
 
     res.send("sent and received");
   });

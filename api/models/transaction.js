@@ -4,7 +4,9 @@ const { Schema } = mongoose;
 const transactionSchema = new Schema(
   {
     userId: { type: String, required: true },
-    amount: Number,
+    amount: { type: Number, required: true },
+    recipientId: { type: String, required: false },
+    senderId: { type: String, required: false },
   },
   { timestamps: true }
 );

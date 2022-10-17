@@ -1,5 +1,6 @@
 import styled from "styled-components";
 
-export const HomeWrapper = styled.div`
-  display: flex;
+export const Amount = styled.h1`
+  color: ${(p) => (p.amount > 0 ? "#1fe61f;" : "#ff3737;")};
+  font-weight: bold;
 `;

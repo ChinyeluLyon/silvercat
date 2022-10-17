@@ -2,7 +2,7 @@ import useAxios from "axios-hooks";
 
 const url = "/user";
 
-const useGetUser = () => {
+const useGetUserById = () => {
   const [{ data, loading, error }, refetch] = useAxios(
     {},
     {
@@ -12,15 +12,14 @@ const useGetUser = () => {
     }
   );
 
-  const fetch = ({ name, email }) => {
+  const fetch = ({ id }) => {
     const queryConfig = {
       method: "GET",
-      url: `${url}`,
-      params: { name, email },
+      url: `${url}/${id}`,
     };
     return refetch(queryConfig);
   };
   return { data, loading, error, fetch };
 };
 
-export default useGetUser;
+export default useGetUserById;

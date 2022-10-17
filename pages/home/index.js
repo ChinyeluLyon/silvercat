@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import useGetUser from "../../hooks/UseGetUser";
+import useGetUserByDetails from "../../hooks/UseGetUserByDetails";
 import Transactions from "../../modules/transactions";
 import useGetTransactions from "../../hooks/UseGetTransactions";
 import SendMoney from "../../modules/sendMoney";
+import * as S from "./home.styles";
+
+export const formatCurrency = (value) => {
+  return new Intl.NumberFormat().format(value);
+};
 
 const Home = () => {
   const router = useRouter();
 
-  const { data: userData, fetch: getUser } = useGetUser();
+  const { data: userData, fetch: getUser } = useGetUserByDetails();
   const { data: transactionsData, refetch: getTransactions } =
     useGetTransactions(userData?._id);
 
@@ -26,10 +31,6 @@ const Home = () => {
     }
   }, []);
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat().format(value);
-  };
-
   return (
     <div>
       <button onClick={handleSignOut}>Sign out</button>
@@ -38,7 +39,10 @@ const Home = () => {
       <hr />
       <div>
         <h1>Welcome {userData?.name}</h1>
-        <h2>Balance: €{formatCurrency(userData?.balance)}</h2>
+        <S.Amount amount={userData?.balance}>
+          {userData?.balance < 0 && "-"}€
+          {formatCurrency(Math.abs(userData?.balance))}
+        </S.Amount>
       </div>
 
       <h2>Send Money</h2>
@@ -49,7 +53,9 @@ const Home = () => {
       />
 
       <h2>Transactions</h2>
-      <Transactions transactionArray={transactionsData} />
+      {transactionsData?.map((t) => (
+        <Transactions transaction={t} />
+      ))}
     </div>
   );
 };
