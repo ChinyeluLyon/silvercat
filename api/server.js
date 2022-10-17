@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const User = require("./models/users");
 const Transaction = require("./models/transaction");
-const { redirect } = require("next/dist/server/api-utils");
+const { getUser, createUser } = require("./utils");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -33,45 +33,6 @@ app.prepare().then(async () => {
   server.use(express.static("_next"));
   server.use(express.static("../pages"));
   server.all("/_next/*", (req, res) => handle(req, res));
-
-  const getUser = (name, email) => {
-    return new Promise(async (resolve, reject) => {
-      User.findOne({ name, email })
-        .then((result) => {
-          if (result) {
-            resolve(result);
-          } else {
-            resolve(null);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    });
-  };
-
-  const createUser = (name, email) => {
-    return new Promise(async (resolve, reject) => {
-      const found = await getUser(name, email);
-      console.log(found);
-      if (!found) {
-        const user = new User({
-          name: name,
-          email: email,
-          balance: 100,
-        });
-
-        user
-          .save()
-          .then((response) => {
-            resolve(response);
-          })
-          .catch((err) => console.log(err));
-      } else {
-        resolve(found);
-      }
-    });
-  };
 
   const createTransaction = (userId, amount, recipientId, senderId) => {
     return new Promise(async (resolve, reject) => {
