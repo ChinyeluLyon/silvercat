@@ -5,19 +5,22 @@ import useGetTransactions from "../hooks/UseGetTransactions";
 import useGetUser from "../hooks/UseGetUser";
 import Transactions from "../modules/transactions";
 import useGetUsers from "../hooks/UseGetUsers";
+import usePostSendMoney from "../hooks/UsePostSendMoney";
 
 export default function Home() {
   const [user, setUser] = useState();
+  const [amount, setAmount] = useState();
+  const [recipientId, setRecipientId] = useState();
+
   const { fetch: createUser } = usePostCreateUser();
-  const { data: transactionsData, refetch } = useGetTransactions(user?._id);
+  const { data: transactionsData, refetch: getTransactions } =
+    useGetTransactions(user?._id);
+  const { fetch: sendMoney } = usePostSendMoney(user?._id);
   const { data: usersData } = useGetUsers();
   const { data: userData, refetch: getUser } = useGetUser(
     user?.name,
     user?.email
   );
-
-  console.log(user?._id);
-  console.log(transactionsData);
 
   const hideSignIn = (hidden) => {
     document.getElementById("signInDiv").hidden = hidden;
@@ -29,21 +32,17 @@ export default function Home() {
   };
 
   const handleCallbackResponse = async (response) => {
-    // console.log("JWT: ", response.credential);
     const userObj = jwt_decode(response.credential);
-    // console.log("user: ", userObj);
     const { data: userData } = await createUser({
       name: userObj.name,
       email: userObj.email,
     });
-    console.log(userData);
     setUser(userData);
     hideSignIn(true);
   };
 
   const handleUserPrefill = async () => {
     const test = await getUser();
-    console.log(test);
     setUser(userData);
     hideSignIn(true);
   };
@@ -61,7 +60,6 @@ export default function Home() {
       size: "large",
     });
     const userSessionData = JSON.parse(sessionStorage.getItem("user"));
-    console.log(userSessionData);
 
     if (userSessionData) {
       handleUserPrefill();
@@ -72,7 +70,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      refetch();
+      getTransactions();
     }
     if (user && sessionStorage.getItem("user") == null) {
       sessionStorage.setItem("user", JSON.stringify(user));
@@ -84,9 +82,12 @@ export default function Home() {
   const userOptions = usersData
     ?.filter((u) => u._id !== user?._id)
     .map((u, idx) => {
-      return <option key={idx}>{u.name}</option>;
+      return (
+        <option key={idx} value={u._id}>
+          {u.name}
+        </option>
+      );
     });
-
   return (
     <div>
       <div id={"signInDiv"}></div>
@@ -102,16 +103,39 @@ export default function Home() {
 
       <div>
         <div>
-          <input type="number" />
-          <select>
+          <input
+            type="number"
+            placeholder="Amount"
+            onChange={(ev) => {
+              setAmount(ev.target.value);
+            }}
+          />
+          <select
+            onChange={(ev) => {
+              setRecipientId(ev.target.value);
+            }}
+          >
             <option disabled selected value>
               -- select a user --
             </option>
             {userOptions}
           </select>
         </div>
+
         <div>
-          <button>Send Funds</button>
+          <button
+            onClick={async () => {
+              await sendMoney({
+                amount,
+                recipientUserId: recipientId,
+                currentUserId: user._id,
+              });
+              await getTransactions();
+              const test = await getUser();
+            }}
+          >
+            Send Funds
+          </button>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ const useGetUsers = (name, email) => {
   const params = { name, email };
 
   const queryConfig = {
-    method: "get",
+    method: "GET",
     url: `${url}`,
     params,
   };

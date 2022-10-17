@@ -6,13 +6,14 @@ const useGetUser = (name, email) => {
   const params = { name, email };
 
   const queryConfig = {
-    method: "get",
+    method: "GET",
     url: `${url}`,
     params,
   };
   const [{ data, loading, error }, refetch] = useAxios(queryConfig, {
     manual: true,
     autoCancel: false,
+    useCache: false,
   });
 
   return { data, loading, error, refetch };

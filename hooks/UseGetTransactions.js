@@ -4,11 +4,12 @@ const url = "/transactions";
 
 const useGetTransactions = (userId) => {
   const queryConfig = {
-    method: "get",
+    method: "GET",
     url: `${url}/${userId}`,
   };
   const [{ data, loading, error }, refetch] = useAxios(queryConfig, {
     autoCancel: false,
+    useCache: false,
   });
 
   return { data, loading, error, refetch };
