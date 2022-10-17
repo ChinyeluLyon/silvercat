@@ -35,6 +35,13 @@ const Home = () => {
     <div>
       <button onClick={handleSignOut}>Sign out</button>
       <h1>Bambank</h1>
+      <button
+        onClick={() => {
+          router.push("/allUsers");
+        }}
+      >
+        check other users 👀
+      </button>
 
       <hr />
       <div>
