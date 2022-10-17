@@ -12,7 +12,7 @@ const AllUsers = () => {
         <div>{u.name}</div>
         <div>
           <MS.Amount amount={u.balance}>
-            €{formatCurrency(Math.abs(u.balance))}
+            {u.balance < 0 && "-"}€{formatCurrency(Math.abs(u.balance))}
           </MS.Amount>
         </div>
       </S.AllUsersWrapper>
