@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 import jwt_decode from "jwt-decode";
 import usePostCreateUser from "../hooks/UsePostCreateUser";
 import useGetTransactions from "../hooks/UseGetTransactions";
+import useGetUser from "../hooks/UseGetUser";
 import Transactions from "../modules/transactions";
 
 export default function Home() {
   const [user, setUser] = useState();
   const { fetch: createUser } = usePostCreateUser();
-  const { data: transactionsData } = useGetTransactions(user?._id);
+  const { data: transactionsData, refetch } = useGetTransactions(user?._id);
+  const { data: userData, refetch: getUser } = useGetUser(
+    user?.name,
+    user?.email
+  );
 
   console.log(user?._id);
   console.log(transactionsData);
@@ -34,6 +39,13 @@ export default function Home() {
     hideSignIn(true);
   };
 
+  const handleUserPrefill = async () => {
+    const test = await getUser();
+    console.log(test);
+    setUser(userData);
+    hideSignIn(true);
+  };
+
   useEffect(() => {
     /* global google */
     google.accounts.id.initialize({
@@ -48,15 +60,18 @@ export default function Home() {
     });
     const userSessionData = JSON.parse(sessionStorage.getItem("user"));
     console.log(userSessionData);
+
     if (userSessionData) {
-      setUser(userSessionData);
-      hideSignIn(true);
+      handleUserPrefill();
     } else {
       document.getElementById("signInDiv").hidden = false;
     }
   }, []);
 
   useEffect(() => {
+    if (user) {
+      refetch();
+    }
     if (user && sessionStorage.getItem("user") == null) {
       sessionStorage.setItem("user", JSON.stringify(user));
     } else {
@@ -74,9 +89,10 @@ export default function Home() {
       )}
 
       <h2>Welcome {user?.name}</h2>
-      <h2>Welcome {user?._id}</h2>
+      <h3>Balance: £{user?.balance}</h3>
       <hr />
 
+      <h2>Transactions</h2>
       <Transactions transactionArray={transactionsData} />
     </div>
   );

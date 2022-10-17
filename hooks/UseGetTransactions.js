@@ -8,7 +8,7 @@ const useGetTransactions = (userId) => {
     url: `${url}/${userId}`,
   };
   const [{ data, loading, error }, refetch] = useAxios(queryConfig, {
-    useCache: false,
+    autoCancel: false,
   });
 
   return { data, loading, error, refetch };
