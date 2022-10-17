@@ -6,8 +6,11 @@ import useGetUser from "../hooks/UseGetUser";
 import Transactions from "../modules/transactions";
 import useGetUsers from "../hooks/UseGetUsers";
 import usePostSendMoney from "../hooks/UsePostSendMoney";
+import { useRouter } from "next/router";
 
-export default function Home() {
+export default function Handler() {
+  const router = useRouter();
+
   const [user, setUser] = useState();
   const [amount, setAmount] = useState();
   const [recipientId, setRecipientId] = useState();
@@ -62,9 +65,11 @@ export default function Home() {
     const userSessionData = JSON.parse(sessionStorage.getItem("user"));
 
     if (userSessionData) {
-      handleUserPrefill();
+      // handleUserPrefill();
+      router.push("/home");
     } else {
-      document.getElementById("signInDiv").hidden = false;
+      router.push("/loginSignup");
+      // document.getElementById("signInDiv").hidden = false;
     }
   }, []);
 
@@ -75,7 +80,7 @@ export default function Home() {
     if (user && sessionStorage.getItem("user") == null) {
       sessionStorage.setItem("user", JSON.stringify(user));
     } else {
-      sessionStorage.removeItem("user");
+      // sessionStorage.removeItem("user");
     }
   }, [user]);
 
